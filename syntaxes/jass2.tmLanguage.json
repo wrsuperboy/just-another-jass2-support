@@ -1,0 +1,80 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "JASS2",
+  "patterns": [
+    {
+      "include": "#comments"
+    },
+    {
+      "include": "#keywords"
+    },
+    {
+      "include": "#types"
+    },
+    {
+      "include": "#functions"
+    },
+    {
+      "include": "#numbers"
+    },
+    {
+      "include": "#strings"
+    }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.jass",
+          "match": "//.*$"
+        },
+        {
+          "name": "comment.block.jass",
+          "begin": "/\\*",
+          "end": "\\*/"
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.jass",
+          "match": "\\b(if|then|else|elseif|loop|endloop|exitwhen|return|function|takes|returns|endfunction|call|set|local|constant|native|globals|endglobals|type|extends)\\b"
+        }
+      ]
+    },
+    "types": {
+      "patterns": [
+        {
+          "name": "storage.type.jass",
+          "match": "\\b(integer|real|string|boolean|handle|nothing|code|player|unit|group|trigger|timer|location|vector)\\b"
+        }
+      ]
+    },
+    "functions": {
+      "patterns": [
+        {
+          "name": "support.function.jass",
+          "match": "\\b(BJDebugMsg|CreateUnit|GetTriggerUnit|TriggerRegisterPlayerEvent|TriggerAddCondition|TriggerAddAction)\\b"
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.jass",
+          "match": "\\b\\d+(\\.\\d+)?\\b"
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.jass",
+          "match": "\"(?:[^\"\\\\]|\\\\.)*\""
+        }
+      ]
+    }
+  },
+  "scopeName": "source.jass2"
+}
