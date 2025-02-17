@@ -16,10 +16,10 @@ export function activate(context: vscode.ExtensionContext) {
   };
 
   let clientOptions: LanguageClientOptions = {
-    documentSelector: [{ scheme: "file", language: "jass" }]
+    documentSelector: [{ scheme: "file", language: "jass2" }]
   };
 
-  let client = new LanguageClient("jassLanguageServer", "JASS Language Server", serverOptions, clientOptions);
+  let client = new LanguageClient("jass2LanguageServer", "JASS Language Server", serverOptions, clientOptions);
   client.start().then(() => {
     context.subscriptions.push(client);
   });

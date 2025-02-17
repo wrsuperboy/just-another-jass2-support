@@ -15,7 +15,7 @@
       "include": "#functions"
     },
     {
-      "include": "#numbers"
+      "include": "#constants"
     },
     {
       "include": "#strings"
@@ -27,11 +27,6 @@
         {
           "name": "comment.line.jass",
           "match": "//.*$"
-        },
-        {
-          "name": "comment.block.jass",
-          "begin": "/\\*",
-          "end": "\\*/"
         }
       ]
     },
@@ -39,7 +34,11 @@
       "patterns": [
         {
           "name": "keyword.control.jass",
-          "match": "\\b(if|then|else|elseif|loop|endloop|exitwhen|return|function|takes|returns|endfunction|call|set|local|constant|native|globals|endglobals|type|extends)\\b"
+          "match": "\\b(if|then|else|elseif|endif|loop|endloop|exitwhen|return|function|takes|returns|endfunction|call|set|local|constant|native|globals|endglobals|type|extends)\\b"
+        },
+        {
+          "name": "keyword.operator.jass",
+          "match": "\\b(not|and|or)\\b|[+\\-*/=<>!]"
         }
       ]
     },
@@ -47,23 +46,19 @@
       "patterns": [
         {
           "name": "storage.type.jass",
-          "match": "\\b(integer|real|string|boolean|handle|nothing|code|player|unit|group|trigger|timer|location|vector)\\b"
+          "match": "\\b(integer|real|string|boolean|nothing|code|handle|array)\\b"
         }
       ]
     },
-    "functions": {
-      "patterns": [
-        {
-          "name": "support.function.jass",
-          "match": "\\b(BJDebugMsg|CreateUnit|GetTriggerUnit|TriggerRegisterPlayerEvent|TriggerAddCondition|TriggerAddAction)\\b"
-        }
-      ]
-    },
-    "numbers": {
+    "constants": {
       "patterns": [
         {
           "name": "constant.numeric.jass",
-          "match": "\\b\\d+(\\.\\d+)?\\b"
+          "match": "\\b\\d+(\\.\\d+)?\\b|'[A-Za-z0-9]{4}'"
+        },
+        {
+          "name": "constant.language.jass",
+          "match": "\\b(null|true|false)\\b"
         }
       ]
     },
@@ -72,6 +67,14 @@
         {
           "name": "string.quoted.jass",
           "match": "\"(?:[^\"\\\\]|\\\\.)*\""
+        }
+      ]
+    },
+    "functions": {
+      "patterns": [
+        {
+          "name": "entity.name.function.jass",
+          "match": "\\b\\w+(?=\\()|(?<=\\bfunction\\s)\\w+"
         }
       ]
     }
