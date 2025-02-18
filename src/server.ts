@@ -19,37 +19,12 @@ connection.onInitialize(() => ({
   },
 }));
 
-const keywords = [
-  "if",
-  "then",
-  "else",
-  "elseif",
-  "endif",
-  "loop",
-  "endloop",
-  "exitwhen",
-  "return",
-  "function",
-  "takes",
-  "returns",
-  "endfunction",
-  "call",
-  "set",
-  "local",
-  "constant",
-  "native",
-  "globals",
-  "endglobals",
-  "type",
-  "extends",
-];
-
-connection.onCompletion(() =>
-  keywords.map((keyword) => ({
-    label: keyword,
-    kind: CompletionItemKind.Keyword,
-  }))
-);
+// connection.onCompletion(() =>
+//   keywords.map((keyword) => ({
+//     label: keyword,
+//     kind: CompletionItemKind.Keyword,
+//   }))
+// );
 
 documents.listen(connection);
 connection.listen();
