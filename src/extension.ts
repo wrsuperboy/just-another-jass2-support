@@ -52,7 +52,7 @@ const legend = new vscode.SemanticTokensLegend(
     "string",
     "operator",
   ],
-  ["definition", "declaration"]
+  ["definition", "declaration", "readonly"]
 );
 
 export function activate(context: vscode.ExtensionContext) {
@@ -144,7 +144,14 @@ class Jass2TokenListener implements JASS2Listener {
 
   enterVariable(ctx: VariableContext) {
     this.addToken(ctx.typename().ID(), "type");
-    this.addToken(ctx.varname().ID(), "variable", ["declaration"]);
+    if (ctx.CONSTANT()) {
+      this.addToken(ctx.varname().ID(), "variable", [
+        "declaration",
+        "readonly",
+      ]);
+    } else {
+      this.addToken(ctx.varname().ID(), "variable", ["declaration"]);
+    }
   }
 
   enterParam(ctx: ParamContext) {
@@ -225,7 +232,7 @@ class Jass2TokenListener implements JASS2Listener {
   enterExprReal(ctx: ExprRealContext) {
     this.addToken(ctx.REALVAL(), "number");
   }
-  
+
   private addToken(
     node: TerminalNode,
     tokenType: string,
