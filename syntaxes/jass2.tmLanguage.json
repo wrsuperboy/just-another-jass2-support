@@ -34,7 +34,7 @@
       "patterns": [
         {
           "name": "keyword.control.jass",
-          "match": "\\b(if|then|else|elseif|endif|loop|endloop|exitwhen|return|function|takes|returns|endfunction|call|set|local|constant|native|globals|endglobals|type|extends)\\b"
+          "match": "\\b(if|then|else|elseif|endif|loop|endloop|exitwhen|return|function|takes|returns|endfunction|call|set|local|constant|native|globals|endglobals|type|extends|array|nothing)\\b"
         },
         {
           "name": "keyword.operator.jass",
@@ -46,7 +46,7 @@
       "patterns": [
         {
           "name": "storage.type.jass",
-          "match": "\\b(integer|real|string|boolean|nothing|code|handle|array)\\b"
+          "match": "\\b(integer|real|string|boolean|code|handle)\\b"
         }
       ]
     },
