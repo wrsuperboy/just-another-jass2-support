@@ -19,6 +19,7 @@ import JASS2Lexer from "./generated/JASS2Lexer";
 import JASS2Parser, {
   ExprAddContext,
   ExprAndContext,
+  ExprArrContext,
   ExprCallContext,
   ExprEqContext,
   ExprFunContext,
@@ -188,6 +189,10 @@ class Jass2TokenListener implements JASS2Listener {
 
   enterExprStr(ctx: ExprStrContext) {
     this.addToken(ctx.STRING(), "string");
+  }
+
+  enterExprArr(ctx: ExprArrContext) {
+    this.addToken(ctx.ID(), "variable");
   }
 
   enterExprUn(ctx: ExprUnContext) {
