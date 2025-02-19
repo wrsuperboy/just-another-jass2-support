@@ -88,11 +88,19 @@ export function activate(context: vscode.ExtensionContext) {
       { provideDefinition }
     )
   );
+
+  context.subscriptions.push(
+    vscode.languages.registerDeclarationProvider(
+      { language: "jass2" },
+      { provideDeclaration }
+    )
+  );
+
   context.subscriptions.push(client);
   client.start();
 }
 
-export function provideDefinition(
+function provideDefinition(
   document: vscode.TextDocument,
   position: vscode.Position,
   token: vscode.CancellationToken
@@ -114,7 +122,54 @@ export function provideDefinition(
   return null;
 }
 
-export class Jass2SemanticTokenProvider
+export function provideDeclaration(
+  document: vscode.TextDocument,
+  position: vscode.Position,
+  token: vscode.CancellationToken
+): vscode.Declaration | null {
+  const text = document.getText();
+  const wordRange = document.getWordRangeAtPosition(position);
+  if (!wordRange) return null;
+
+  const word = document.getText(wordRange);
+
+  const declarationRegex = new RegExp(
+    `^([ \\t]*(?:constant)?local\\b.*\\b)${word}\\b`
+  );
+  for (let i = position.line; i >= 0; i--) {
+    const line = document.lineAt(i).text;
+
+    if (token.isCancellationRequested) {
+      return null;
+    }
+
+    if (/^[ \t]*function.*\btakes\b/.test(line)) {
+      const paramRegex = new RegExp(
+        `(\\btakes\\b.*\\b)${word}[ \\t]*(?:,|returns\\b)`
+      );
+      const paramMatch = paramRegex.exec(line);
+      if (paramMatch) {
+        return new vscode.Location(
+          document.uri,
+          new vscode.Position(i, paramMatch.index + paramMatch[1].length)
+        );
+      }
+      break;
+    }
+
+    const declarationMatch = declarationRegex.exec(line);
+    if (declarationMatch) {
+      return new vscode.Location(
+        document.uri,
+        new vscode.Position(i, declarationMatch[1].length)
+      );
+    }
+  }
+
+  return null;
+}
+
+class Jass2SemanticTokenProvider
   implements vscode.DocumentSemanticTokensProvider
 {
   async provideDocumentSemanticTokens(
