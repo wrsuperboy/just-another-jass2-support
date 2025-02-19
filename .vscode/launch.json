@@ -12,6 +12,9 @@
 			"args": [
 				"--extensionDevelopmentPath=${workspaceFolder}"
 			],
+			"outFiles": [
+				"${workspaceFolder}/target/**/*.js"
+			],
 			"autoAttachChildProcesses": true,
 			"preLaunchTask": {
 				"type": "npm",

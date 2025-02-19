@@ -53,8 +53,8 @@ connection.onFoldingRanges((params: FoldingRangeParams) => {
   const text = document.getText();
   const foldingRanges: FoldingRange[] = [];
 
-  const globalRegex = /globals\b[\s\S]*?\bendglobals/g;
-  const functionRegex = /function\b[\s\S]*?\bendfunction/g;
+  const globalRegex = /^[ \t]*globals\b[\s\S]*?\bendglobals/gm;
+  const functionRegex = /^[ \t]*function\b[\s\S]*?\bendfunction/gm;
 
   let match;
   while ((match = globalRegex.exec(text)) !== null) {
@@ -69,14 +69,14 @@ connection.onFoldingRanges((params: FoldingRangeParams) => {
     foldingRanges.push(FoldingRange.create(start.line, end.line - 1));
   }
 
-  const ifRegex = /\b(if|elseif|else|endif)\b/g;
+  const ifRegex = /^[ \t]*(if|elseif|else|endif)\b/gm;
   const ifStack: {
     start: Position;
     type: "if" | "elseif" | "else" | "endif";
   }[] = [];
   while ((match = ifRegex.exec(text)) !== null) {
     const keyword = match[1];
-    const position = document.positionAt(match.index);
+    const position = document.positionAt(match.index + 1);
 
     if (keyword === "if" || keyword === "elseif" || keyword === "else") {
       ifStack.push({ start: position, type: keyword });
@@ -93,11 +93,11 @@ connection.onFoldingRanges((params: FoldingRangeParams) => {
     }
   }
 
-  const loopRegex = /\b(loop|endloop)\b/g;
+  const loopRegex = /^[ \t]*(loop|endloop)\b/gm;
   const loopStack: Position[] = [];
   while ((match = loopRegex.exec(text)) !== null) {
     const keyword = match[1];
-    const position = document.positionAt(match.index);
+    const position = document.positionAt(match.index + 1);
 
     if (keyword === "loop") {
       loopStack.push(position);

@@ -4,7 +4,8 @@
       "module": "commonjs",
       "outDir": "target",
       "strict": true,
-      "forceConsistentCasingInFileNames": true
+      "forceConsistentCasingInFileNames": true,
+      "sourceMap": true
     },
     "include": ["src"]
   }
