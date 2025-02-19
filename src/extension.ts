@@ -186,7 +186,7 @@ class Jass2TokenListener implements JASS2Listener {
 
   enterParam(ctx: ParamContext) {
     this.addToken(ctx.typename().ID(), "type");
-    this.addToken(ctx.varname().ID(), "variable");
+    this.addToken(ctx.varname().ID(), "parameter");
   }
 
   enterReturnsRule(ctx: ReturnsRuleContext) {
