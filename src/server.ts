@@ -5,9 +5,7 @@ import {
   CompletionItem,
   CompletionItemKind,
   TextDocumentSyncKind,
-  DefinitionParams,
   Position,
-  Definition,
   FoldingRange,
   FoldingRangeParams,
 } from "vscode-languageserver/node";
@@ -22,7 +20,6 @@ connection.onInitialize(() => ({
   capabilities: {
     textDocumentSync: TextDocumentSyncKind.Incremental,
     completionProvider: {},
-    definitionProvider: true,
     foldingRangeProvider: true,
   },
 }));
@@ -46,74 +43,6 @@ connection.onCompletion(() =>
       )
     )
 );
-
-connection.onDefinition((params: DefinitionParams) => {
-  const document = documents.get(params.textDocument.uri);
-
-  if (!document) {
-    return null;
-  }
-
-  const position = params.position;
-  const word = getWordAtPosition(document, position);
-  const definition = findDefinition(document, word);
-
-  if (definition) {
-    return {
-      uri: document.uri,
-      range: {
-        start: definition,
-        end: Position.create(
-          definition.line,
-          definition.character + word.length
-        ),
-      },
-    } as Definition;
-  }
-
-  return null;
-});
-
-function isWordCharacter(char: string): boolean {
-  return (
-    (char >= "a" && char <= "z") ||
-    (char >= "A" && char <= "Z") ||
-    (char >= "0" && char <= "9") ||
-    char === "_"
-  );
-}
-
-function getWordAtPosition(document: TextDocument, position: Position): string {
-  const text = document.getText();
-  const offset = document.offsetAt(position);
-
-  // Find the start of the word
-  let start = offset;
-  while (start > 0 && isWordCharacter(text.charAt(start - 1))) {
-    start--;
-  }
-
-  // Find the end of the word
-  let end = offset;
-  while (end < text.length && isWordCharacter(text.charAt(end))) {
-    end++;
-  }
-
-  return text.substring(start, end);
-}
-
-function findDefinition(document: TextDocument, word: string): Position | null {
-  const text = document.getText();
-  const regex = new RegExp(`(function\\s+)${word}\\s+takes`);
-  const match = regex.exec(text);
-
-  if (match) {
-    const index = match.index + match[1].length;
-    return document.positionAt(index);
-  }
-
-  return null;
-}
 
 connection.onFoldingRanges((params: FoldingRangeParams) => {
   const document = documents.get(params.textDocument.uri);

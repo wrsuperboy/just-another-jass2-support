@@ -81,8 +81,37 @@ export function activate(context: vscode.ExtensionContext) {
       legend
     )
   );
+
+  context.subscriptions.push(
+    vscode.languages.registerDefinitionProvider(
+      { language: "jass2" },
+      { provideDefinition }
+    )
+  );
   context.subscriptions.push(client);
   client.start();
+}
+
+export function provideDefinition(
+  document: vscode.TextDocument,
+  position: vscode.Position,
+  token: vscode.CancellationToken
+): vscode.Definition | null {
+  const text = document.getText();
+  const wordRange = document.getWordRangeAtPosition(position);
+  const word = wordRange ? document.getText(wordRange) : "";
+
+  const regex = new RegExp(`(function\\s+)${word}\\s+takes`);
+  const match = regex.exec(text);
+
+  if (match) {
+    const index = match.index + match[1].length;
+    const start = document.positionAt(index);
+    const end = document.positionAt(index + word.length);
+    return new vscode.Location(document.uri, new vscode.Range(start, end));
+  }
+
+  return null;
 }
 
 export class Jass2SemanticTokenProvider
