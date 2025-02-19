@@ -36,6 +36,11 @@
       }
     ]
   },
+  "scripts": {
+		"vscode:prepublish": "npm run compile",
+		"compile": "tsc -b",
+		"watch": "tsc -b -w"
+	},
   "dependencies": {
     "antlr4": "^4.13.2",
     "vscode-languageclient": "^9.0.1",
