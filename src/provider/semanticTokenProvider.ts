@@ -2,10 +2,14 @@ import * as vscode from "vscode";
 import {
   CharStreams,
   CommonTokenStream,
+  ErrorListener,
   ErrorNode,
   ParserRuleContext,
   ParseTreeWalker,
+  RecognitionException,
+  Recognizer,
   TerminalNode,
+  Token,
 } from "antlr4";
 import JASS2Lexer from "../generated/JASS2Lexer";
 import JASS2Parser, {
@@ -51,6 +55,10 @@ export const legend = new vscode.SemanticTokensLegend(
 export class Jass2SemanticTokenProvider
   implements vscode.DocumentSemanticTokensProvider
 {
+  private diagnosticCollection: vscode.DiagnosticCollection;
+  constructor(diagnosticCollection: vscode.DiagnosticCollection) {
+    this.diagnosticCollection = diagnosticCollection;
+  }
   async provideDocumentSemanticTokens(
     document: vscode.TextDocument,
     token: vscode.CancellationToken
@@ -64,12 +72,21 @@ export class Jass2SemanticTokenProvider
     const tokenStream = new CommonTokenStream(lexer);
     const parser = new JASS2Parser(tokenStream);
 
+    const diagnostics: vscode.Diagnostic[] = [];
+    parser.addErrorListener(new Jass2ErrorListener(diagnostics));
+
     // Step 2: Parse the document
     const tree = parser.root(); // Adjust based on your grammar's root rule
 
     // Step 3: Walk the parse tree and extract semantic tokens
     const tokenListener = new Jass2TokenListener(document, builder, token);
-    ParseTreeWalker.DEFAULT.walk(tokenListener, tree);
+    try {
+      ParseTreeWalker.DEFAULT.walk(tokenListener, tree);
+    } catch (e) {
+      // do nothing
+    }
+
+    this.diagnosticCollection.set(document.uri, diagnostics);
 
     return builder.build();
   }
@@ -209,5 +226,37 @@ class Jass2TokenListener implements JASS2Listener {
     const start = this.document.positionAt(node.symbol.start);
     const end = this.document.positionAt(node.symbol.stop + 1);
     this.builder.push(new vscode.Range(start, end), tokenType, tokenModifiers);
+  }
+}
+
+export class Jass2ErrorListener implements ErrorListener<Token> {
+  private diagnostics: vscode.Diagnostic[];
+
+  constructor(diagnostics: vscode.Diagnostic[]) {
+    this.diagnostics = diagnostics;
+  }
+  syntaxError(
+    recognizer: Recognizer<Token>,
+    offendingSymbol: Token,
+    line: number,
+    column: number,
+    msg: string,
+    e: RecognitionException | undefined
+  ): void {
+    // Convert to zero-based index
+    const start = new vscode.Position(line - 1, column);
+    const end = new vscode.Position(
+      line - 1,
+      column + (offendingSymbol.stop - offendingSymbol.start + 1)
+    );
+    const range = new vscode.Range(start, end);
+
+    const diagnostic = new vscode.Diagnostic(
+      range,
+      msg,
+      vscode.DiagnosticSeverity.Error
+    );
+
+    this.diagnostics.push(diagnostic);
   }
 }

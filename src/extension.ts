@@ -32,22 +32,19 @@ export function activate(context: vscode.ExtensionContext) {
     clientOptions
   );
 
+  const diagnostics = vscode.languages.createDiagnosticCollection("jass2");
+	context.subscriptions.push(diagnostics);
+
   context.subscriptions.push(
     vscode.languages.registerDocumentSemanticTokensProvider(
       { language: "jass2" },
-      new Jass2SemanticTokenProvider(),
+      new Jass2SemanticTokenProvider(diagnostics),
       legend
-    )
-  );
-
-  context.subscriptions.push(
+    ),
     vscode.languages.registerDefinitionProvider(
       { language: "jass2" },
       new Jass2DefinitionProvider()
-    )
-  );
-
-  context.subscriptions.push(
+    ),
     vscode.languages.registerDeclarationProvider(
       { language: "jass2" },
       new Jass2DeclarationProvider()
