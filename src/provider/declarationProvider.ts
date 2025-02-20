@@ -13,7 +13,7 @@ export class Jass2DeclarationProvider implements vscode.DeclarationProvider {
     const word = document.getText(wordRange);
 
     const declarationRegex = new RegExp(
-      `^([ \\t]*(?:constant)?local\\b.*\\b)${word}\\b`
+      `^([ \\t]*(?:constant[ \\t]+)?(?:local[ \\t]+)?\\b)${word}\\b`
     );
     for (let i = position.line; i >= 0; i--) {
       const line = document.lineAt(i).text;

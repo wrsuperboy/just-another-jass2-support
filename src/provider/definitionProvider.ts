@@ -11,7 +11,7 @@ export class Jass2DefinitionProvider implements vscode.DefinitionProvider {
         const word = document.getText(wordRange);
 
         const text = document.getText();
-        const regex = new RegExp(`(^function[ \\t]+)${word}[ \\t]+takes`);
+        const regex = new RegExp(`(function[ \\t]+)${word}[ \\t]+takes`);
         const match = regex.exec(text);
     
         if (match) {

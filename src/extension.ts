@@ -33,7 +33,7 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   const diagnostics = vscode.languages.createDiagnosticCollection("jass2");
-	context.subscriptions.push(diagnostics);
+  context.subscriptions.push(diagnostics);
 
   context.subscriptions.push(
     vscode.languages.registerDocumentSemanticTokensProvider(

@@ -8,6 +8,7 @@ import {
   Position,
   FoldingRange,
   FoldingRangeParams,
+  CompletionParams,
 } from "vscode-languageserver/node";
 
 import { TextDocument } from "vscode-languageserver-textdocument";
@@ -24,25 +25,30 @@ connection.onInitialize(() => ({
   },
 }));
 
-connection.onCompletion(() =>
-  keywords
+connection.onCompletion((params: CompletionParams) => {
+  const prefix = params.context?.triggerCharacter || '';
+  const keywordCompletions = keywords
+    .filter(keyword => keyword.startsWith(prefix))
     .map(
       (keyword) =>
         ({
           label: keyword,
           kind: CompletionItemKind.Keyword,
         } as CompletionItem)
-    )
-    .concat(
-      constants.map(
-        (constant) =>
-          ({
-            label: constant,
-            kind: CompletionItemKind.Constant,
-          } as CompletionItem)
-      )
-    )
-);
+    );
+
+  const constantCompletions = constants
+    .filter(constant => constant.startsWith(prefix))
+    .map(
+      (constant) =>
+        ({
+          label: constant,
+          kind: CompletionItemKind.Constant,
+        } as CompletionItem)
+    );
+
+  return [...keywordCompletions, ...constantCompletions];
+});
 
 connection.onFoldingRanges((params: FoldingRangeParams) => {
   const document = documents.get(params.textDocument.uri);
