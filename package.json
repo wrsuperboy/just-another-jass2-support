@@ -2,6 +2,10 @@
   "name": "just-another-jass2-support",
   "displayName": "Just another JASS support",
   "description": "A JASS2 language support",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wrsuperboy/just-another-jass2-support"
+  },
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.97.0"
@@ -37,10 +41,10 @@
     ]
   },
   "scripts": {
-		"vscode:prepublish": "npm run compile",
-		"compile": "tsc -b",
-		"watch": "tsc -b -w"
-	},
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -b",
+    "watch": "tsc -b -w"
+  },
   "dependencies": {
     "antlr4": "^4.13.2",
     "vscode-languageclient": "^9.0.1",
