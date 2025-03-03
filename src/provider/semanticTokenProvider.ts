@@ -30,6 +30,7 @@ import JASS2Parser, {
   NativeRuleContext,
   ParamContext,
   ReturnsRuleContext,
+  RootContext,
   StmtCallContext,
   StmtSetContext,
   TypeContext,
@@ -79,7 +80,15 @@ export class Jass2SemanticTokenProvider
     const tree = parser.root(); // Adjust based on your grammar's root rule
 
     // Step 3: Walk the parse tree and extract semantic tokens
-    const tokenListener = new Jass2TokenListener(document, builder, token);
+    const tokenListener = new Jass2TokenListener(
+      document,
+      builder,
+      token,
+      diagnostics
+    );
+    if (/function[ \t]+main/.test(text)) {
+      tokenListener.enableUnusedCheck(true);
+    }
     try {
       ParseTreeWalker.DEFAULT.walk(tokenListener, tree);
     } catch (e) {
@@ -96,15 +105,29 @@ class Jass2TokenListener implements JASS2Listener {
   private document: vscode.TextDocument;
   private builder: vscode.SemanticTokensBuilder;
   private cancellationToken: vscode.CancellationToken;
+  private diagnostics: vscode.Diagnostic[];
+
+  private unusedCheck: boolean;
+  private globalVariablesMap: Map<string, vscode.Range> = new Map();
+  private globalVariablesUnused: Set<string> = new Set();
+  private localVariablesMap: Map<string, vscode.Range> = new Map();
+  private localVariablesUnused: Set<string> = new Set();
 
   constructor(
     document: vscode.TextDocument,
     builder: vscode.SemanticTokensBuilder,
-    cancellationToken: vscode.CancellationToken
+    cancellationToken: vscode.CancellationToken,
+    diagnostics: vscode.Diagnostic[]
   ) {
     this.document = document;
     this.builder = builder;
     this.cancellationToken = cancellationToken;
+    this.diagnostics = diagnostics;
+    this.unusedCheck = false;
+  }
+
+  enableUnusedCheck(enableUnusedCheck: boolean) {
+    this.unusedCheck = enableUnusedCheck;
   }
 
   visitTerminal(node: TerminalNode): void {}
@@ -118,6 +141,22 @@ class Jass2TokenListener implements JASS2Listener {
 
   exitEveryRule(ctx: ParserRuleContext): void {}
 
+  exitRoot(ctx: RootContext) {
+    if (this.unusedCheck) {
+      for (const varname of this.globalVariablesUnused) {
+        this.diagnostics.push(
+          new vscode.Diagnostic(
+            this.globalVariablesMap.get(varname)!,
+            `Variable ${varname} declared but never used`,
+            vscode.DiagnosticSeverity.Warning
+          )
+        );
+      }
+      this.globalVariablesUnused.clear();
+      this.globalVariablesMap.clear();
+    }
+  }
+
   enterType(ctx: TypeContext) {
     this.addToken(ctx.ID(), "type", ["definition"]);
     this.addToken(ctx.extendsRule().ID(), "type");
@@ -125,13 +164,79 @@ class Jass2TokenListener implements JASS2Listener {
 
   enterVariable(ctx: VariableContext) {
     this.addToken(ctx.typename().ID(), "type");
+    if (ctx.ARRAY()) {
+      this.addToken(ctx.ARRAY(), "type");
+    }
+    const varnameToken = ctx.varname().ID();
     if (ctx.CONSTANT()) {
-      this.addToken(ctx.varname().ID(), "variable", [
-        "declaration",
-        "readonly",
-      ]);
+      this.addToken(varnameToken, "variable", ["declaration", "readonly"]);
     } else {
-      this.addToken(ctx.varname().ID(), "variable", ["declaration"]);
+      this.addToken(varnameToken, "variable", ["declaration"]);
+    }
+
+    if (this.unusedCheck) {
+      const varname = varnameToken.getText();
+      if (!ctx.LOCAL()) {
+        const range = this.globalVariablesMap.get(varname);
+        if (range) {
+          this.diagnostics.push(
+            new vscode.Diagnostic(
+              new vscode.Range(
+                this.document.positionAt(varnameToken.symbol.start),
+                this.document.positionAt(varnameToken.symbol.stop + 1)
+              ),
+              `Variable ${varname} already declared at ${range.start.line}:${range.start.character}`,
+              vscode.DiagnosticSeverity.Error
+            )
+          );
+        } else {
+          this.globalVariablesMap.set(
+            varname,
+            new vscode.Range(
+              this.document.positionAt(varnameToken.symbol.start),
+              this.document.positionAt(varnameToken.symbol.stop + 1)
+            )
+          );
+          this.globalVariablesUnused.add(varname);
+        }
+      } else {
+        const range = this.localVariablesMap.get(varname);
+        if (range) {
+          this.diagnostics.push(
+            new vscode.Diagnostic(
+              new vscode.Range(
+                this.document.positionAt(varnameToken.symbol.start),
+                this.document.positionAt(varnameToken.symbol.stop + 1)
+              ),
+              `Variable ${varname} already declared at ${range.start.line}:${range.start.character}`,
+              vscode.DiagnosticSeverity.Error
+            )
+          );
+        } else {
+          this.localVariablesMap.set(
+            varname,
+            new vscode.Range(
+              this.document.positionAt(varnameToken.symbol.start),
+              this.document.positionAt(varnameToken.symbol.stop + 1)
+            )
+          );
+          this.localVariablesUnused.add(varname);
+        }
+
+        const globalRange = this.globalVariablesMap.get(varname);
+        if (globalRange) {
+          this.diagnostics.push(
+            new vscode.Diagnostic(
+              new vscode.Range(
+                this.document.positionAt(varnameToken.symbol.start),
+                this.document.positionAt(varnameToken.symbol.stop + 1)
+              ),
+              `Variable ${varname} shades global variable at ${globalRange.start.line}:${globalRange.start.character}`,
+              vscode.DiagnosticSeverity.Warning
+            )
+          );
+        }
+      }
     }
   }
 
@@ -155,6 +260,22 @@ class Jass2TokenListener implements JASS2Listener {
     this.addToken(ctx.ID(), "function", ["declaration"]);
   }
 
+  exitFunction(ctx: FunctionContext) {
+    if (this.unusedCheck) {
+      for (const varname of this.localVariablesUnused) {
+        this.diagnostics.push(
+          new vscode.Diagnostic(
+            this.localVariablesMap.get(varname)!,
+            `Variable ${varname} declared but never used`,
+            vscode.DiagnosticSeverity.Warning
+          )
+        );
+      }
+      this.localVariablesUnused.clear();
+      this.localVariablesMap.clear();
+    }
+  }
+
   enterStmtSet(ctx: StmtSetContext) {
     this.addToken(ctx.ID(), "variable");
   }
@@ -173,6 +294,13 @@ class Jass2TokenListener implements JASS2Listener {
 
   enterExprArr(ctx: ExprArrContext) {
     this.addToken(ctx.ID(), "variable");
+
+    if (this.unusedCheck) {
+      const varname = ctx.ID().getText();
+      if (!this.localVariablesUnused.delete(varname)) {
+        this.globalVariablesUnused.delete(varname);
+      }
+    }
   }
 
   enterExprUn(ctx: ExprUnContext) {
@@ -181,6 +309,13 @@ class Jass2TokenListener implements JASS2Listener {
 
   enterExprVar(ctx: ExprVarContext) {
     this.addToken(ctx.ID(), "variable");
+
+    if (this.unusedCheck) {
+      const varname = ctx.ID().getText();
+      if (!this.localVariablesUnused.delete(varname)) {
+        this.globalVariablesUnused.delete(varname);
+      }
+    }
   }
 
   enterExprEq(ctx: ExprEqContext) {
