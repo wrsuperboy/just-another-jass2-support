@@ -1,4 +1,4 @@
-# just-another-jass2-support README
+# Just Another JASS Support
 
 Just another language support for Warcraft III's JASS script language.
 
@@ -37,3 +37,9 @@ Initial release of Just Another JASS Support
 ### 0.0.2
 
 Add jump-to-definition for BJ and CJ functions
+
+### 0.0.3
+
+- Report unused variables
+- Fix find declaration for local variables
+- Correctly set color for "array"
